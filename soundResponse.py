@@ -22,18 +22,12 @@ import pygame
 from pydub import AudioSegment
 from pydub.playback import play
 import numpy as np
-import pdb
 pygame.init()
 pygame.mixer.init()
 
 fps = 60 #graphics rate
-color = pygame.Color('forestgreen')
 
-CW = list(np.linspace(0,6*np.pi, 500)) # angles to calculate CW rotation
-CCW = list(np.linspace(6*np.pi,0, 500)) # angles to calculate CCW rotation
-
-# From Dr. Z's soundSync script
-class soundCtrlr:
+class Ctrlr:
     def __init__(self,filename='tech.wav',fps=60, channel=0):
         self.sound = AudioSegment.from_file(filename) #replace string with YOUR filename with extension (works with wav and mp3)
         self.pySound = pygame.mixer.Sound(filename) #for playing sounds
@@ -80,6 +74,8 @@ class soundCtrlr:
         if self.winSize < idx < len(self.samples)-self.winSize:
             # uses a blackman window to get chunk of time, we'll use a bit before the current time, and a bit after
             indata = self.samples[idx-self.winSize:idx+self.winSize] * np.blackman(2*self.winSize) # creates a tapered window to calculate frequency, size of self.winSize
+        elif idx >= len(self.samples)-2*self.winSize:
+            indata = self.samples[-(2*self.winSize):] * np.blackman(2*self.winSize)
         elif idx >= self.winSize:
             indata = self.samples[0:idx+(2*self.winSize)-1] * np.blackman(2*self.winSize)
         else:
@@ -94,15 +90,14 @@ class soundCtrlr:
             x1 = np.abs((y2 - y0) * .5 / (2 * y1 - y2 - y0))
             # find the frequency and output it
             return (maxFreq+x1)*self.bitrate/self.winSize, idx # convert to frequency based on song bitrate
-#        elif maxFreq == 0:
-#            y0,y1,y2 = np.log(fftData[maxFreq:maxFreq+3:])
-#            x1 = (y2 - y0) * .5 / (2 * y1 - y2 - y0)
-#            if x1<0:
-#                pdb.set_trace()
-#            # find the frequency and output it
-#            return (maxFreq+x1)*self.bitrate/self.winSize, idx
+
         else:
             return maxFreq*self.bitrate/self.winSize, idx
+        
+        def cleanUp(self):
+            pass
+        def pause(self):
+            pass
 
 def circPath(x0,y0,r,theta):    
     '''Create the circular path for my shape, and call the shape drawing function.
@@ -126,7 +121,7 @@ freqRect=pygame.Rect(50,300,500,200) # Rect for arc (frequency animation)
 
 
 # make the object (plays sound when intantiated)
-techno = soundCtrlr()
+techno = Ctrlr()
 # -------- Main Program Loop -----------
 while done:
     
